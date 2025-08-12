@@ -1,0 +1,23 @@
+{
+    "name": "novay/kunci",
+    "description": "Core Laravel package for secure encryption/decryption with pluggable key management drivers (file-based, Cloud KMS).",
+    "type": "laravel-package",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Novay\\Kunci\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Novay\\Kunci\\KunciServiceProvider"
+            ],
+            "aliases": {
+                "Kunci": "Novay\\Kunci\\Facades\\Kunci"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
