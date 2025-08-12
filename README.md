@@ -127,7 +127,7 @@ You *do not* need to manually call `Kunci::loadKeyFromFile()` when using a KMS d
 Encrypting data remains simple, as the Facade abstracts the underlying key management:
 
 ```php
-use Kunci; // Use the Facade
+use Novay\Kunci\Facades\Kunci; // Use the Facade
 
 $dataToEncrypt = "This is highly sensitive information.";
 
@@ -146,7 +146,7 @@ try {
 Decrypting data also uses the same consistent Facade interface:
 
 ```php
-use Kunci;
+use Novay\Kunci\Facades\Kunci;
 
 // Assume $encryptedData is a valid string encrypted by Kunci
 try {
