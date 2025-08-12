@@ -13,8 +13,6 @@
     * [Important: Key File Security](#important-key-file-security)
 * [Cloud KMS Integration](#cloud-kms-integration)
     * [Supported KMS Drivers](#supported-kms-drivers)
-    * [Installing a KMS Driver](#installing-a-kms-driver)
-    * [Configuring a KMS Driver](#configuring-a-kms-driver)
 * [Usage](#usage)
     * [Loading Key (Automatic Driver Selection)](#loading-key-automatic-driver-selection)
     * [Encrypting Data](#encrypting-data)
@@ -111,31 +109,6 @@ Currently, the following Cloud KMS drivers are planned (or could be developed):
   * `novay/kunci-aws`: Integration with AWS Key Management Service (KMS).
   * `novay/kunci-azure`: Integration with Azure Key Vault.
   * `novay/kunci-gcp`: Integration with Google Cloud Key Management Service (KMS).
-
-#### Installing a KMS Driver
-
-To use a specific Cloud KMS, you need to install its corresponding driver package in addition to `novay/kunci`. For example, to use AWS KMS:
-
-```bash
-composer require novay/kunci-aws
-```
-
-(This command will automatically pull in `novay/kunci` if it's not already installed).
-
-#### Configuring a KMS Driver
-
-After installing a KMS driver package, you need to configure `novay/kunci` to use it.
-
-1.  **Set the Driver:** In your `config/kunci.php` file (or via `KUNCI_DRIVER` environment variable), set the `driver` option to your desired KMS provider (e.g., `'aws-kms'`).
-
-    ```php
-    // config/kunci.php (after publishing)
-    return [
-        'driver' => env('KUNCI_DRIVER', 'file'), // Change 'file' to 'aws-kms', 'gcp-kms', or 'azure-kv'
-
-        ...
-    ];
-    ```
 
 -----
 
