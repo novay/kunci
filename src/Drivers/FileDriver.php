@@ -2,7 +2,7 @@
 
 namespace Novay\Kunci\Drivers;
 
-use Novay\Kunci\Contracts\KunciDriver;
+use Novay\Kunci\Contracts\DeterministicKunciDriver;
 use Novay\Kunci\Kunci as KunciUtility; 
 use Exception;
 
@@ -15,7 +15,7 @@ use Exception;
  *
  * @package Novay\Kunci\Drivers
  */
-class FileDriver implements KunciDriver
+class FileDriver implements DeterministicKunciDriver
 {
     /**
      * @var string Path lengkap ke file kunci.
@@ -99,4 +99,48 @@ class FileDriver implements KunciDriver
 
         return openssl_decrypt($encrypted, 'aes-256-cbc', $key, 0, $iv);
     }
+
+    /**
+     * Enkripsi deterministik (searchable encryption).
+     *
+     * Menggunakan AES-256-ECB tanpa IV agar ciphertext selalu sama untuk plaintext yang sama.
+     * Format data dienkode Base64 tanpa IV karena ECB tidak menggunakan IV.
+     *
+     * @param string $data Plaintext yang akan dienkripsi deterministik.
+     * @return string Ciphertext dalam Base64.
+     * @throws \Exception Jika enkripsi gagal.
+     */
+    public function encryptDeterministic(string $data): string
+    {
+        $key = $this->getKey();
+
+        $encrypted = openssl_encrypt($data, 'aes-256-ecb', $key, OPENSSL_RAW_DATA);
+
+        if ($encrypted === false) {
+            throw new Exception('Enkripsi deterministik gagal.');
+        }
+
+        return base64_encode($encrypted);
+    }
+
+    /**
+     * Dekripsi data yang dienkripsi secara deterministik.
+     *
+     * @param string $encryptedData Ciphertext dalam Base64.
+     * @return string|false Plaintext hasil dekripsi atau false jika gagal.
+     * @throws \Exception Jika dekripsi gagal.
+     */
+    public function decryptDeterministic(string $encryptedData): string|false
+    {
+        $key = $this->getKey();
+
+        $decoded = base64_decode($encryptedData);
+
+        if ($decoded === false) {
+            return false;
+        }
+
+        return openssl_decrypt($decoded, 'aes-256-ecb', $key, OPENSSL_RAW_DATA);
+    }
+    
 }

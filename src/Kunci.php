@@ -4,6 +4,7 @@ namespace Novay\Kunci;
 
 use Illuminate\Contracts\Foundation\Application;
 use Novay\Kunci\Contracts\KunciDriver;
+use Novay\Kunci\Contracts\DeterministicKunciDriver;
 use Novay\Kunci\Drivers\FileDriver; 
 use Exception;
 
@@ -165,5 +166,41 @@ class Kunci
         }
 
         return $key;
+    }
+
+    /**
+     * Enkripsi data secara deterministik hanya jika driver mendukung.
+     *
+     * @param string $data
+     * @return string
+     * @throws \Exception Jika driver tidak mendukung enkripsi deterministik.
+     */
+    public function encryptDeterministic(string $data): string
+    {
+        $driver = $this->driver();
+
+        if (!$driver instanceof DeterministicKunciDriver) {
+            throw new Exception("Driver does not support deterministic encryption.");
+        }
+
+        return $driver->encryptDeterministic($data);
+    }
+
+    /**
+     * Dekripsi data deterministik hanya jika driver mendukung.
+     *
+     * @param string $encryptedData
+     * @return string|false
+     * @throws \Exception Jika driver tidak mendukung dekripsi deterministik.
+     */
+    public function decryptDeterministic(string $encryptedData): string|false
+    {
+        $driver = $this->driver();
+
+        if (!$driver instanceof DeterministicKunciDriver) {
+            throw new Exception("Driver does not support deterministic decryption.");
+        }
+
+        return $driver->decryptDeterministic($encryptedData);
     }
 }

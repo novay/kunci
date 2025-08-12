@@ -42,6 +42,18 @@ return [
             |
             */
             'key_file_path' => env('KUNCI_KEY_FILE', storage_path('app/private/.key')),
+
+            /*
+            |--------------------------------------------------------------------------
+            | File Driver Deterministic Encryption
+            |--------------------------------------------------------------------------
+            |
+            | Jika diaktifkan, enkripsi akan menghasilkan output yang konsisten
+            | untuk input yang sama. Ini berguna untuk operasi perbandingan
+            | data terenkripsi (misalnya, dalam query WHERE).
+            |
+            */
+            'deterministic_enabled' => true,
         ], 
 
         'usb' => [

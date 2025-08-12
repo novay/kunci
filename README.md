@@ -11,12 +11,14 @@
     * [Generating a New Key](#generating-a-new-key)
     * [Key Path Configuration](#key-path-configuration)
     * [Important: Key File Security](#important-key-file-security)
+* [Deterministic Encryption Support](#deterministic-encryption-support)
 * [Cloud KMS Integration](#cloud-kms-integration)
     * [Supported KMS Drivers](#supported-kms-drivers)
 * [Usage](#usage)
     * [Loading Key (Automatic Driver Selection)](#loading-key-automatic-driver-selection)
     * [Encrypting Data](#encrypting-data)
     * [Decrypting Data](#decrypting-data)
+    * [Deterministic Encryption Usage](#deterministic-encryption-usage)
 * [License](#license)
 
 ---
@@ -24,6 +26,7 @@
 ### Features
 * **Secure Encryption & Decryption:** Utilizes the industry-standard **AES-256-CBC** algorithm via the PHP OpenSSL extension.
 * **Flexible Key Management:** Supports a default file-based key driver and provides an extensible architecture for integrating with various Cloud KMS providers.
+* **Deterministic Encryption Support:** Provides optional deterministic encryption and decryption methods for drivers that implement it, enabling encrypted data to be searched or matched without decryption.
 * **Automatic Key Generation:** Offers an Artisan command to generate cryptographically secure 64-character (256-bit) encryption keys for the file-based driver.
 * **Seamless Laravel Integration:** Integrates smoothly with Laravel through its Service Provider and Facade, allowing easy switching between key management drivers.
 
@@ -86,17 +89,30 @@ KUNCI_KEY_FILE=/absolute/path/to/your/custom/.key
 
 After generating the key file, it is **critically important** to protect it with appropriate file system permissions:
 
-  * **Restrict Read Access:** Ensure that only the system user running your web server process (e.g., `www-data` or `nginx`) can read the file.
-  * **Secure Location:** Store the key file outside any publicly accessible directory (`public_html` or `public/`). The `storage/app/` directory (or its subdirectories like `storage/app/private/`) is a recommended location.
+* **Restrict Read Access:** Ensure that only the system user running your web server process (e.g., `www-data` or `nginx`) can read the file.
+* **Secure Location:** Store the key file outside any publicly accessible directory (`public_html` or `public/`). The `storage/app/` directory (or its subdirectories like `storage/app/private/`) is a recommended location.
 
 Example commands to set permissions (adjust to your web server's user/group):
 
-```bash 
+```bash
 chmod 600 storage/app/private/.key
 chown www-data:www-data storage/app/private/.key # Replace www-data with the appropriate user/group
 ```
 
------
+---
+
+### Deterministic Encryption Support
+
+Not all drivers support **deterministic encryption** (encrypting data in a way that produces the same ciphertext for the same plaintext, useful for searchable encryption).
+
+* The package defines a **separate interface** `DeterministicKunciDriver` which extends the base `KunciDriver` interface.
+* Drivers that implement this interface provide `encryptDeterministic()` and `decryptDeterministic()` methods.
+* The core Facade `Kunci` will **automatically check** if the configured driver supports deterministic encryption before calling these methods.
+* If a driver does **not** support deterministic encryption, attempting to use these methods will throw an exception.
+
+Currently, the default **FileDriver** implements deterministic encryption methods, but other drivers (e.g., Cloud KMS drivers) may or may not support it.
+
+---
 
 ### Cloud KMS Integration
 
@@ -106,9 +122,34 @@ chown www-data:www-data storage/app/private/.key # Replace www-data with the app
 
 Currently, the following Cloud KMS drivers are planned (or could be developed):
 
-  * `novay/kunci-aws`: Integration with AWS Key Management Service (KMS).
-  * `novay/kunci-azure`: Integration with Azure Key Vault.
-  * `novay/kunci-gcp`: Integration with Google Cloud Key Management Service (KMS).
+* `novay/kunci-aws`: Integration with AWS Key Management Service (KMS).
+* `novay/kunci-azure`: Integration with Azure Key Vault.
+* `novay/kunci-gcp`: Integration with Google Cloud Key Management Service (KMS).
+
+#### Installing a KMS Driver
+
+To use a specific Cloud KMS, you need to install its corresponding driver package in addition to `novay/kunci`. For example, to use AWS KMS:
+
+```bash
+composer require novay/kunci-aws
+```
+
+(This command will automatically pull in `novay/kunci` if it's not already installed).
+
+#### Configuring a KMS Driver
+
+After installing a KMS driver package, you need to configure `novay/kunci` to use it.
+
+1.  **Set the Driver:** In your `config/kunci.php` file (or via `KUNCI_DRIVER` environment variable), set the `driver` option to your desired KMS provider (e.g., `'aws-kms'`).
+
+    ```php
+    // config/kunci.php (after publishing)
+    return [
+        'driver' => env('KUNCI_DRIVER', 'file'), // Change 'file' to 'aws-kms', 'gcp-kms', or 'azure-kv'
+
+        ...
+    ];
+    ```
 
 -----
 
@@ -163,7 +204,30 @@ try {
 }
 ```
 
------
+#### Deterministic Encryption Usage
+
+To use deterministic encryption (if supported by your configured driver), you can call:
+
+```php
+use Novay\Kunci\Facades\Kunci;
+
+$data = "searchable data";
+
+try {
+    // Encrypt deterministically
+    $encrypted = Kunci::encryptDeterministic($data);
+
+    // Later, decrypt deterministically
+    $decrypted = Kunci::decryptDeterministic($encrypted);
+
+    echo "Encrypted (deterministic): $encrypted\n";
+    echo "Decrypted: $decrypted\n";
+} catch (\Exception $e) {
+    echo "Deterministic encryption is not supported by the current driver: " . $e->getMessage();
+}
+```
+
+---
 
 ### License
 
